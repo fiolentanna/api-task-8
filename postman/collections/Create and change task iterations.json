@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "7c8c8bc6-d172-4814-9732-ba8793aedff4",
+		"_postman_id": "15ed53ff-391b-4b34-b3af-a87771506e4e",
 		"name": "Create and change task iterations",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_uid": "3431373-7c8c8bc6-d172-4814-9732-ba8793aedff4"
+		"_uid": "14921549-15ed53ff-391b-4b34-b3af-a87771506e4e"
 	},
 	"item": [
 		{
@@ -12,7 +12,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "317e6091-ac33-4e75-b88c-aead74bc40f9",
+						"id": "02dcfa41-874d-41ee-84c3-5772f4b3cb41",
 						"exec": [
 							"let jsonData = pm.response.json();",
 							"pm.environment.set('token', jsonData.id_token)"
@@ -21,7 +21,7 @@
 					}
 				}
 			],
-			"id": "000d5bce-1fbe-4442-bb9b-5c896289170d",
+			"id": "be6f8113-b158-4cdf-aca8-ed5d227814f1",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -111,34 +111,53 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "235f919d-8a50-4dad-a4db-3507b6dac55a",
+						"id": "773b0cce-2f95-4b49-ab54-55c60d69dfc0",
 						"exec": [
+							"// Получаем текущее количество задач из ответа",
 							"let currentAmountOfTasks = pm.response.json().length;",
 							"console.log(pm.response.json().length)",
 							"",
-							"pm.environment.set('currentAmountOfTasks', currentAmountOfTasks)",
-							"pm.environment.set(\"ids\", [])",
+							"// Устанавливаем идентификатор последней задачи из списка в переменную окружения",
+							"pm.environment.set('lastID', pm.response.json()[pm.response.json().length-1].id);",
 							"",
-							"if(currentAmountOfTasks < pm.environment.get('targetNumberOfTasks')) {",
-							"    postman.setNextRequest('create a task')",
+							"",
+							"// Устанавливаем текущее количество задач в переменную окружения",
+							"pm.environment.set('currentAmountOfTasks', currentAmountOfTasks);",
+							"",
+							"// Устанавливаем пустой массив айди тасок в переменную окружения",
+							"pm.environment.set(\"ids\", []);",
+							"",
+							"// Устанавливаем условия реализации запросов в зависимости от количества тасок в базе данных и целевого значения количества тасок",
+							"if (currentAmountOfTasks < pm.environment.get('targetNumberOfTasks')) {",
+							"    // Если текущее количество задач меньше целевого, переходим к запросу \"create a task\"",
+							"    postman.setNextRequest('create a task');",
 							"} else {",
-							"    postman.setNextRequest('change task text')}"
+							"    // Иначе переходим к запросу \"change task text\"",
+							"    postman.setNextRequest('change task text');",
+							"}",
+							"",
+							"// Проверяем статус-код ответа 200",
+							"pm.test(\"Response status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				},
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a3b0ae78-2bad-4037-a331-da3cea4acf58",
+						"id": "c391ffee-daa8-486a-85ed-f467e674c172",
 						"exec": [
 							""
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
-			"id": "43a438c7-4c79-44d0-848b-a251515ced36",
+			"id": "371d283a-108f-4d8e-a411-7c68ea9149e7",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -155,7 +174,7 @@
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/tasks?page=0&size=100",
+					"raw": "{{baseUrl}}/tasks?page=0&size=2000",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -169,7 +188,7 @@
 						},
 						{
 							"key": "size",
-							"value": "100"
+							"value": "2000"
 						}
 					]
 				}
@@ -182,38 +201,53 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "47eb0efe-9d81-4616-b88e-6e54e79610b8",
+						"id": "4131634c-b910-410c-968f-4654e77fb2ee",
 						"exec": [
+							"/ Получаем данные из ответа в формате JSON",
 							"let jsonData = pm.response.json();",
 							"",
-							"pm.test(\"Your test name\", function () {",
+							"// Проверяем, что значение поля \"text\" в ответе соответствует ожидаемому тексту",
+							"pm.test(\"Проверка значения поля \\\"text\\\"\", function () {",
 							"    pm.expect(jsonData.text).to.eql(\"some text\");",
 							"});",
 							"",
-							"const ids = pm.environment.get(\"ids\")",
-							"console.log(\"jsonData.id is \" + jsonData.id)",
-							"ids.push(jsonData.id)",
-							"console.log(ids)",
-							"pm.environment.set(\"ids\", ids)",
+							"// Получаем массив идентификаторов из переменных окружения",
+							"const ids = pm.environment.get(\"ids\");",
 							"",
-							"pm.environment.set('lastID', jsonData.id)",
+							"// Добавляем новый идентификатор в массив идентификаторов",
+							"ids.push(jsonData.id);",
 							"",
+							"// Устанавливаем обновленный массив идентификаторов в переменную окружения",
+							"pm.environment.set(\"ids\", ids);",
+							"",
+							"// Устанавливаем значение последнего идентификатора в переменную окружения",
+							"pm.environment.set('lastID', jsonData.id);",
+							"",
+							"// Получаем текущее количество задач из переменных окружения",
 							"let currentAmountOfTasks = pm.environment.get(\"currentAmountOfTasks\");",
-							"currentAmountOfTasks++;",
-							"pm.environment.set('currentAmountOfTasks', currentAmountOfTasks)",
 							"",
-							"if(currentAmountOfTasks < pm.environment.get('targetNumberOfTasks')) {",
-							"    postman.setNextRequest(\"create a task\")",
+							"// Увеличиваем счетчик текущего количества задач на 1",
+							"currentAmountOfTasks++;",
+							"",
+							"// Устанавливаем обновленное количество задач в переменную окружения",
+							"pm.environment.set('currentAmountOfTasks', currentAmountOfTasks);",
+							"",
+							"// Устанавливаем следующий запрос в зависимости от текущего количества задач",
+							"if (currentAmountOfTasks < pm.environment.get('targetNumberOfTasks')) {",
+							"    postman.setNextRequest(\"create a task\");",
 							"} else {",
-							"    postman.setNextRequest('change task text')",
+							"    postman.setNextRequest('change task text');",
 							"}",
-							""
+							"pm.test(\"Your test name\", function () {",
+							"    pm.expect(jsonData.text).to.eql(\"some text\");",
+							"});"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
-			"id": "1e3dbd12-d8d7-4ca1-9a81-e38c05cb2eab",
+			"id": "c6671291-9e55-4700-9382-c02a618a158c",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -255,7 +289,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "39e2b88c-58d2-4c0a-b861-1e21219d08eb",
+						"id": "a0ba7d29-4a56-430e-afe5-fc6e9eaee33a",
 						"exec": [
 							""
 						],
@@ -263,7 +297,7 @@
 					}
 				}
 			],
-			"id": "32e03ff6-baea-465b-a2e2-3a97c70939ce",
+			"id": "b4346898-78a1-4629-8623-a6f83e95915a",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -306,13 +340,18 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a67eb558-5ffd-4c07-9a1c-9dc647995d0a",
+						"id": "536c1182-fa5c-4b07-86b6-f4de0cfce5ca",
 						"exec": [
+							"// Получаем массив идентификаторов из переменных окружения",
 							"let arr = pm.environment.get('ids')",
 							"",
+							"// Получаем базовый URL из переменных окружения",
+							"let baseUrl = pm.environment.get('baseUrl')",
+							"",
+							"// Удаление всех созданных тасок, которые хранятся в массиве с id тасок",
 							"arr.forEach((id)=>{",
 							"    pm.sendRequest(",
-							"        {url: `https://sqlverifier-50d286d70656.herokuapp.com/api/tasks/${id}`,",
+							"        {url: `${baseUrl}/tasks/${id}`,",
 							"        method: 'DELETE',",
 							"        header:",
 							"        {'Authorization': 'Bearer ' + pm.environment.get('token'),",
@@ -323,16 +362,20 @@
 							"    });",
 							"})",
 							"",
-							"",
-							"",
-							"",
+							"// Удаляем переменные из окружения для очистки базы данных после завершения тестирования",
+							"pm.environment.unset('lastID');",
+							"pm.environment.unset('targetNumberOfTasks');",
+							"pm.environment.unset('currentAmountOfTasks');",
+							"pm.environment.unset('ids');",
+							"pm.environment.unset('token');",
 							""
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
-			"id": "3f9de192-3f64-45fa-8cd2-68c9041fce4b",
+			"id": "04496cc2-d072-41a6-99bc-710937c1c7f0",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -376,7 +419,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "a565044a-0e9e-4dc2-8e8f-13f3573a4c5d",
+				"id": "e7f8e336-648a-4f8c-a497-dc8a9f97e68a",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -386,7 +429,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "006424dc-5fee-4e73-b440-1c4203f89177",
+				"id": "29a1f930-677e-4331-9764-e458fef6ba56",
 				"type": "text/javascript",
 				"exec": [
 					""
